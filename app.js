@@ -45,28 +45,6 @@ const convertDistrictsDetailsToResponseObject = (dbObject) => {
   };
 };
 
-//Authentication Token
-const authenticateToken = (request, response, next) => {
-  let jwtToken;
-  const authHeader = request.headers["authorization"];
-  if (authHeader !== undefined) {
-    jwtToken = authHeader.split(" ")[1];
-  }
-  if (jwtToken === undefined) {
-    response.status(401);
-    response.send("Invalid JWT Token");
-  } else {
-    jwt.verify(jwtToken, "MY_SECRET_TOKEN", async (error, payload) => {
-      if (error) {
-        response.send("Invalid JWT Token");
-      } else {
-        request.username = payload.username;
-        next();
-      }
-    });
-  }
-};
-
 //user Login API
 app.post("/login/", async (request, response) => {
   const { username, password } = request.body;
@@ -90,6 +68,28 @@ app.post("/login/", async (request, response) => {
   }
 });
 
+//Authentication Token
+const authenticateToken = (request, response, next) => {
+  let jwtToken;
+  const authHeader = request.headers["authorization"];
+  if (authHeader !== undefined) {
+    jwtToken = authHeader.split(" ")[1];
+  }
+  if (jwtToken === undefined) {
+    response.status(401);
+    response.send("Invalid JWT Token");
+  } else {
+    jwt.verify(jwtToken, "MY_SECRET_TOKEN", async (error, payload) => {
+      if (error) {
+        response.send("Invalid JWT Token");
+      } else {
+        request.username = payload.username;
+        next();
+      }
+    });
+  }
+};
+
 //Get States API
 app.get("/states/", authenticateToken, async (request, response) => {
   const getStatesQuery = `
@@ -105,7 +105,7 @@ app.get("/states/", authenticateToken, async (request, response) => {
 });
 
 //Get State API
-app.get("/states/:stateId/", async (request, response) => {
+app.get("/states/:stateId/", authenticateToken, async (request, response) => {
   const { stateId } = request.params;
   const getStateQuery = `
         SELECT *
@@ -151,7 +151,7 @@ app.get(
 //Delete District API
 app.delete(
   "/districts/:districtId/",
-
+  authenticateToken,
   async (request, response) => {
     const { districtId } = request.params;
     const deleteDistrictQuery = `
@@ -193,7 +193,7 @@ app.put(
 //Get Statistics API
 app.get(
   "/states/:stateId/stats/",
-
+  authenticateToken,
   async (request, response) => {
     const { stateId } = request.params;
     const getStatisticsQuery = `
